@@ -1,0 +1,463 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ruleta de Verdad o Reto</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+html,body{margin:0}
+/* Layout: ruleta grande a la izquierda, panel de turno y ajustes a la derecha; en celular todo en una columna. Oscuro y cálido, un solo look. */
+:root {
+  color-scheme: dark;
+  --bg: #1b0e1e;
+  --surface: #2b1733;
+  --surface-2: #38203f;
+  --line: #4d2f56;
+  --fg: #fdf0e8;
+  --muted: #c9afc4;
+  --rose: #ff4f8b;
+  --amber: #ffb340;
+  --violet: #7a4be0;
+  --coral: #ff7b54;
+  --ink: #2a1022;
+  --font-display: "Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
+  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background-image: radial-gradient(900px 500px at 85% -10%, rgba(255,79,139,.16), transparent 60%),
+                    radial-gradient(700px 420px at 0% 100%, rgba(122,75,224,.18), transparent 60%);
+  background-repeat: no-repeat;
+}
+.wrap { max-width: 1040px; margin-inline: auto; display: grid; gap: 22px; }
+header { display: grid; gap: 4px; }
+.eyebrow { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--amber); font-weight: 700; }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(34px, 7vw, 60px); line-height: 1; margin: 0; letter-spacing: -.02em; text-wrap: balance; }
+h1 span { color: var(--rose); }
+.sub { color: var(--muted); margin: 6px 0 0; max-width: 56ch; }
+
+.game { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 820px) { .game { grid-template-columns: minmax(0, 1fr); } }
+
+/* Ruleta */
+.wheel-box { position: relative; width: 100%; max-width: 480px; margin-inline: auto; aspect-ratio: 1; }
+.wheel-spin { position: absolute; inset: 14px; border-radius: 50%; will-change: transform; box-shadow: 0 0 0 6px var(--surface-2), 0 0 0 9px var(--line), 0 24px 60px rgba(0,0,0,.45); }
+.wheel-spin canvas { width: 100%; height: 100%; display: block; border-radius: 50%; }
+.pointer { position: absolute; left: 50%; top: 0; width: 0; height: 0; transform: translateX(-50%); z-index: 3;
+  border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 34px solid var(--amber);
+  filter: drop-shadow(0 3px 4px rgba(0,0,0,.5)); }
+.hub { position: absolute; z-index: 2; left: 50%; top: 50%; width: 22%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%;
+  background: var(--bg); border: 4px solid var(--amber); display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 800; font-size: clamp(11px, 2.4vw, 15px); letter-spacing: .08em; color: var(--amber); text-transform: uppercase; }
+
+/* Panel */
+.side { display: grid; gap: 18px; min-width: 0; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; min-width: 0; }
+.stage { min-height: 280px; display: grid; align-content: center; gap: 14px; }
+.stage h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(26px, 5vw, 38px); line-height: 1.05; margin: 0; letter-spacing: -.01em; text-wrap: balance; }
+.stage p { margin: 0; color: var(--muted); }
+.who { color: var(--amber); }
+.tag { display: inline-block; width: fit-content; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; padding: 5px 12px; border-radius: 999px; }
+.tag.verdad { background: var(--violet); color: #fff; }
+.tag.reto { background: var(--coral); color: var(--ink); }
+.card-text { font-family: var(--font-display); font-weight: 600; font-size: clamp(22px, 4.4vw, 30px); line-height: 1.2; text-wrap: balance; margin: 0; }
+.pasar { color: var(--muted); font-size: 14px; background: var(--surface-2); border-radius: 10px; padding: 10px 12px; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; }
+.row > * { flex: 1 1 140px; }
+
+button { font: inherit; cursor: pointer; border: 0; border-radius: 12px; padding: 14px 18px; font-weight: 700; color: var(--ink); transition: transform .12s ease, filter .12s ease; }
+button:hover:not(:disabled) { filter: brightness(1.08); }
+button:active:not(:disabled) { transform: translateY(1px) scale(.99); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button:focus-visible, input:focus-visible, label:has(input:focus-visible) { outline: 3px solid var(--amber); outline-offset: 2px; }
+.btn-main { background: var(--rose); font-size: 18px; padding: 16px 20px; }
+.btn-verdad { background: var(--violet); color: #fff; font-size: 18px; padding: 18px 20px; }
+.btn-reto { background: var(--coral); font-size: 18px; padding: 18px 20px; }
+.btn-ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+.btn-ok { background: var(--amber); }
+
+/* Ajustes */
+h3 { font-family: var(--font-display); font-size: 15px; letter-spacing: .1em; text-transform: uppercase; margin: 0 0 10px; color: var(--muted); font-weight: 800; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
+.chip { display: inline-flex; align-items: center; gap: 4px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 4px 4px 4px 14px; font-weight: 500; max-width: 100%; }
+.chip span { overflow-wrap: anywhere; }
+.chip button { background: transparent; color: var(--muted); padding: 4px 10px; border-radius: 999px; font-size: 18px; line-height: 1; }
+.chip button:hover:not(:disabled) { color: var(--rose); }
+.add { display: flex; gap: 8px; }
+.add input { flex: 1 1 auto; min-width: 0; font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.add input::placeholder { color: var(--muted); opacity: .8; }
+.add button { background: var(--surface-2); color: var(--fg); border: 1px solid var(--line); flex: 0 0 auto; }
+.levels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.level { position: relative; }
+.level input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.level span { display: grid; gap: 2px; text-align: center; padding: 12px 6px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); font-weight: 700; }
+.level small { font-weight: 400; color: var(--muted); font-size: 12px; }
+.level input:checked + span { background: var(--amber); color: var(--ink); border-color: var(--amber); }
+.level input:checked + span small { color: var(--ink); }
+.level input:focus-visible + span { outline: 3px solid var(--amber); outline-offset: 2px; }
+.hint { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+.fine { font-size: 13px; color: var(--muted); }
+
+@keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+.pop { animation: pop .35s ease both; }
+@media (prefers-reduced-motion: reduce) { .pop { animation: none; } button { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Para parejas · Solo mayores de 18</div>
+    <h1>Verdad <span>o</span> Reto</h1>
+    <p class="sub">Pongan sus nombres, giren la ruleta y quien salga elige. Preguntas incómodas, retos con picante y todo con permiso de los dos.</p>
+  </header>
+
+  <main class="game">
+    <div>
+      <div class="wheel-box" aria-hidden="true">
+        <div class="pointer"></div>
+        <div class="wheel-spin" id="spin"><canvas id="wheel"></canvas></div>
+        <div class="hub">Gira</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <section class="panel stage" id="stage" aria-live="polite"></section>
+
+      <section class="panel">
+        <h3>Jugadores</h3>
+        <ul class="chips" id="chips"></ul>
+        <form class="add" id="addForm">
+          <label for="nameInput" style="position:absolute;left:-9999px">Nombre del jugador</label>
+          <input id="nameInput" type="text" maxlength="18" placeholder="Escribe un nombre" autocomplete="off">
+          <button type="submit">Agregar</button>
+        </form>
+        <p class="hint">Ella y Él son nombres de ejemplo. Bórralos y pon los suyos.</p>
+      </section>
+
+      <section class="panel">
+        <h3>Qué tan picante</h3>
+        <div class="levels" role="radiogroup" aria-label="Nivel de picante">
+          <label class="level"><input type="radio" name="lvl" value="suave"><span>Suave<small>coqueto</small></span></label>
+          <label class="level"><input type="radio" name="lvl" value="picante" checked><span>Picante<small>subido de tono</small></span></label>
+          <label class="level"><input type="radio" name="lvl" value="ardiente"><span>Ardiente<small>sin pena</small></span></label>
+        </div>
+        <p class="hint fine">Cualquiera puede decir "pasar" cuando quiera. Si pasa, paga con un beso de 10 segundos.</p>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+(function () {
+  var PALETTE = [
+    { bg: '#ff4f8b', fg: '#2a1022' },
+    { bg: '#7a4be0', fg: '#ffffff' },
+    { bg: '#ffb340', fg: '#2a1022' },
+    { bg: '#ff7b54', fg: '#2a1022' }
+  ];
+
+  var DECK = {
+    verdad: {
+      suave: [
+        '¿Qué fue lo primero que pensaste de mí cuando nos conocimos?',
+        '¿Cuál ha sido tu cita favorita conmigo y por qué?',
+        '¿Qué apodo mío te da más ternura?',
+        '¿Cuál es la cosa más cursi que has hecho por mí?',
+        '¿Qué canción te recuerda a mí?',
+        '¿En qué momento supiste que yo te gustaba?',
+        '¿Cuál fue la excusa más tonta que usaste para quedar conmigo la primera vez?',
+        '¿Has stalkeado mis fotos viejas? ¿Cuándo fue la última vez?',
+        '¿Qué te dio celos de mí sin que yo lo supiera?',
+        '¿Qué es lo que más te gusta de mis besos?'
+      ],
+      picante: [
+        '¿Qué parte de mi cuerpo miras más cuando crees que no me doy cuenta?',
+        '¿Cuándo has sentido más ganas de mí y no pudiste hacer nada al respecto?',
+        '¿Qué prenda mía te vuelve loco o loca?',
+        '¿Cuál sería el lugar más loco donde te gustaría que nos besáramos?',
+        '¿Qué es lo más atrevido que has pensado de mí en plena clase o reunión?',
+        '¿Qué te derrite más de mí: mi voz, mi olor o mi mirada?',
+        '¿Has soñado algo subido de tono conmigo? Cuenta lo que se pueda contar.',
+        '¿Qué es lo que más te prende de mí cuando estamos solos?',
+        '¿Cuál fue tu beso favorito conmigo y dónde fue?',
+        'Del 1 al 10, ¿qué tan bien beso? Sé sincero o sincera y explica el puntaje.'
+      ],
+      ardiente: [
+        '¿Qué cosa nunca me has pedido pero te mueres de ganas de probar conmigo?',
+        'Describe tu noche perfecta conmigo, con todo lo que te atrevas a decir.',
+        '¿Dónde te gusta más que te toque y cómo?',
+        '¿Con qué disfraz o juego de roles te imaginas que jugaríamos?',
+        '¿Cuál es el lugar más arriesgado donde te gustaría un momento a solas conmigo?',
+        '¿Qué hago yo que te hace perder el control?',
+        '¿Qué te gustaría que hiciera más lento y qué más rápido?',
+        'Si solo pudieras repetir un momento íntimo conmigo, ¿cuál sería?',
+        '¿Qué es lo que más pena te da pedirme o decirme en la intimidad?',
+        '¿Qué palabras al oído te derriten?'
+      ]
+    },
+    reto: {
+      suave: [
+        'Dile tres cosas que te encantan de tu pareja mirándola a los ojos, sin reírte.',
+        'Dale un abrazo de 30 segundos sin decir nada.',
+        'Imita cómo se ríe tu pareja.',
+        'Baila 20 segundos con la canción que tu pareja elija.',
+        'Susúrrale al oído lo que más te gusta de esta noche.',
+        'Dale un beso en la frente y uno en cada mejilla.',
+        'Cuéntale un chiste malo. Si no se ríe, repites con uno peor.',
+        'Deja que tu pareja te peine o te arregle el pelo como quiera.',
+        'Escribe con el dedo una palabra en su espalda y que adivine cuál es.',
+        'Mándale ahora mismo un audio diciéndole algo lindo, aunque esté al lado.'
+      ],
+      picante: [
+        'Dale un masaje de cuello y hombros durante 2 minutos.',
+        'Bésale el cuello durante 15 segundos.',
+        'Dile al oído algo que te gustaría hacerle más tarde.',
+        'Hazle un baile sensual de 30 segundos.',
+        'Dale un beso de 20 segundos con los ojos cerrados y sin usar las manos.',
+        'Quítate la prenda que tu pareja elija y quédate así dos rondas.',
+        'Siéntate en las piernas de tu pareja y dile durante 1 minuto lo que piensas de ella o de él.',
+        'Muerde suavemente el lóbulo de su oreja y susúrrale su nombre.',
+        'Cierra los ojos y deja que tu pareja te dé de comer algo dulce.',
+        'Recorre con tus labios su mano, su muñeca y su brazo hasta el hombro, bien despacio.'
+      ],
+      ardiente: [
+        'Dale un beso largo, de los que dejan sin aire, durante 1 minuto.',
+        'Dale un masaje con crema donde tu pareja elija durante 3 minutos.',
+        'Quítale despacio la prenda que elijas y bésale lo que quede al descubierto.',
+        'Durante 2 minutos tu pareja manda y tú obedeces, dentro de lo que los dos quieran.',
+        'Hazle un striptease de 30 segundos, hasta donde te sientas cómodo o cómoda.',
+        'Susúrrale al oído tu fantasía favorita con todos los detalles que quieras.',
+        'Besa el lugar que tu pareja te señale durante 20 segundos.',
+        'Dile al oído una orden suave y que la cumpla.',
+        'Siéntense frente a frente, cierren los ojos y recórranse la cara con las manos durante 1 minuto.',
+        'Elige: un beso donde menos se lo espera o quitarte una prenda.'
+      ]
+    }
+  };
+
+  var state = {
+    names: ['Ella', 'Él'],
+    level: 'picante',
+    phase: 'idle',      // idle | spinning | choose | card
+    current: null,      // nombre que salió
+    card: null,         // { type, text }
+    rot: 0
+  };
+  var bags = {};
+
+  try {
+    var saved = JSON.parse(localStorage.getItem('vor-names') || 'null');
+    if (Array.isArray(saved) && saved.length >= 2) state.names = saved.slice(0, 8);
+  } catch (e) {}
+
+  var spinEl = document.getElementById('spin');
+  var canvas = document.getElementById('wheel');
+  var stage = document.getElementById('stage');
+  var chips = document.getElementById('chips');
+  var form = document.getElementById('addForm');
+  var input = document.getElementById('nameInput');
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function slices() {
+    var n = state.names.length;
+    var reps = Math.ceil(8 / n);
+    var out = [];
+    for (var r = 0; r < reps; r++) for (var i = 0; i < n; i++) out.push(state.names[i]);
+    return out;
+  }
+
+  function colorFor(i, total) {
+    var k = i % PALETTE.length;
+    if (i === total - 1 && k === 0) k = 1;
+    return PALETTE[k];
+  }
+
+  function drawWheel() {
+    var size = spinEl.clientWidth || 360;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    var ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, size, size);
+    var list = slices();
+    var total = list.length;
+    var step = (Math.PI * 2) / total;
+    var c = size / 2;
+    var R = c;
+    for (var i = 0; i < total; i++) {
+      var a0 = i * step - Math.PI / 2;
+      var col = colorFor(i, total);
+      ctx.beginPath();
+      ctx.moveTo(c, c);
+      ctx.arc(c, c, R, a0, a0 + step);
+      ctx.closePath();
+      ctx.fillStyle = col.bg;
+      ctx.fill();
+      ctx.strokeStyle = '#1b0e1e';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.save();
+      ctx.translate(c, c);
+      ctx.rotate(a0 + step / 2);
+      ctx.fillStyle = col.fg;
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      var fs = Math.max(13, Math.min(24, size * 0.058));
+      ctx.font = '800 ' + fs + 'px "Bricolage Grotesque", "Arial Black", sans-serif';
+      var label = list[i];
+      var maxW = R * 0.62;
+      while (ctx.measureText(label).width > maxW && label.length > 2) label = label.slice(0, -2) + '…';
+      ctx.fillText(label, R - 16, 0);
+      ctx.restore();
+    }
+  }
+
+  function renderChips() {
+    chips.innerHTML = state.names.map(function (n, i) {
+      var disabled = state.names.length <= 2 ? ' disabled' : '';
+      return '<li class="chip"><span>' + esc(n) + '</span><button type="button" data-i="' + i + '" aria-label="Quitar a ' + esc(n) + '"' + disabled + '>×</button></li>';
+    }).join('');
+  }
+
+  function persist() {
+    try { localStorage.setItem('vor-names', JSON.stringify(state.names)); } catch (e) {}
+  }
+
+  function renderStage() {
+    var h = '';
+    if (state.phase === 'idle') {
+      h = '<h2>Gira la ruleta y que empiece el juego</h2>' +
+          '<p>Quien salga elige entre Verdad o Reto. Antes de girar, revisen los nombres y el nivel.</p>' +
+          '<button class="btn-main" id="spinBtn" type="button">Girar la ruleta</button>';
+    } else if (state.phase === 'spinning') {
+      h = '<h2>Girando…</h2><p>Nadie se escapa.</p>' +
+          '<button class="btn-main" type="button" disabled>Girando</button>';
+    } else if (state.phase === 'choose') {
+      h = '<p class="fine">Le tocó a</p>' +
+          '<h2 class="pop"><span class="who">' + esc(state.current) + '</span>, ¿verdad o reto?</h2>' +
+          '<div class="row"><button class="btn-verdad" type="button" data-pick="verdad">Verdad</button>' +
+          '<button class="btn-reto" type="button" data-pick="reto">Reto</button></div>';
+    } else if (state.phase === 'card') {
+      var isV = state.card.type === 'verdad';
+      h = '<div class="pop" style="display:grid;gap:14px">' +
+          '<span class="tag ' + state.card.type + '">' + (isV ? 'Verdad' : 'Reto') + ' · ' + esc(state.current) + '</span>' +
+          '<p class="card-text">' + esc(state.card.text) + '</p>' +
+          '<div class="pasar" id="pasarBox" hidden>Pasar tiene precio: un beso de 10 segundos para tu pareja.</div>' +
+          '<div class="row"><button class="btn-ok" type="button" id="doneBtn">Listo, a girar</button>' +
+          '<button class="btn-ghost" type="button" id="passBtn">Pasar</button></div></div>';
+    }
+    stage.innerHTML = h;
+  }
+
+  function nextCard(type) {
+    var list = DECK[type][state.level];
+    var key = type + '-' + state.level;
+    if (!bags[key] || !bags[key].length) {
+      var arr = list.map(function (_, i) { return i; });
+      for (var i = arr.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+      }
+      bags[key] = arr;
+    }
+    return list[bags[key].pop()];
+  }
+
+  function spin() {
+    if (state.phase === 'spinning') return;
+    state.phase = 'spinning';
+    renderStage();
+    var list = slices();
+    var step = 360 / list.length;
+    var extra = 360 * (5 + Math.floor(Math.random() * 3)) + Math.random() * 360;
+    var final = state.rot + extra;
+    var dur = reduce ? 600 : 4600;
+    spinEl.style.transition = 'transform ' + dur + 'ms cubic-bezier(.12,.7,.1,1)';
+    spinEl.style.transform = 'rotate(' + final + 'deg)';
+    state.rot = final;
+    setTimeout(function () {
+      var a = (360 - (final % 360)) % 360;
+      var idx = Math.floor(a / step) % list.length;
+      state.current = list[idx];
+      state.phase = 'choose';
+      renderStage();
+      if (navigator.vibrate) { try { navigator.vibrate(60); } catch (e) {} }
+    }, dur + 80);
+  }
+
+  stage.addEventListener('click', function (e) {
+    var t = e.target.closest('button');
+    if (!t) return;
+    if (t.id === 'spinBtn') return spin();
+    if (t.dataset.pick) {
+      state.card = { type: t.dataset.pick, text: nextCard(t.dataset.pick) };
+      state.phase = 'card';
+      return renderStage();
+    }
+    if (t.id === 'doneBtn') return spin();
+    if (t.id === 'passBtn') {
+      var box = document.getElementById('pasarBox');
+      if (box) box.hidden = false;
+      t.disabled = true;
+    }
+  });
+
+  chips.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-i]');
+    if (!b || state.phase === 'spinning') return;
+    if (state.names.length <= 2) return;
+    state.names.splice(+b.dataset.i, 1);
+    persist(); renderChips(); drawWheel();
+  });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var v = input.value.trim();
+    if (!v || state.names.length >= 8 || state.phase === 'spinning') { input.focus(); return; }
+    state.names.push(v);
+    input.value = '';
+    persist(); renderChips(); drawWheel();
+    input.focus();
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="lvl"]'), function (r) {
+    r.addEventListener('change', function () { if (r.checked) state.level = r.value; });
+  });
+
+  var rt;
+  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(drawWheel, 120); });
+
+  renderChips();
+  renderStage();
+  drawWheel();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawWheel);
+})();
+</script>
+
+</body>
+</html>
+
+</body></html>
